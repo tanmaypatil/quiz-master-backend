@@ -1,5 +1,5 @@
 import json
-from handler import lambda_handler
+from lambda_function import lambda_handler
 
 # Optional: Function for testing locally
 def test_locally():

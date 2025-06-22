@@ -53,10 +53,21 @@ jobs:
           
       - name: Deploy to Lambda
         run: |
-          aws lambda update-function-code \
-            --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} \
+          FUNCTION_NAME="${{ secrets.LAMBDA_FUNCTION_NAME }}"
+           # Check if function exists
+          if aws lambda get-function --function-name $FUNCTION_NAME 2>/dev/null; then
+            echo "Function exists, updating code..."
+            aws lambda update-function-code \
+            --function-name $FUNCTION_NAME \
             --zip-file fileb://deployment-package.zip
-            
+          else
+            echo "Function does not exist, creating new one..."
+            aws lambda create-function \
+            --function-name $FUNCTION_NAME \
+            --zip-file fileb://deployment-package.zip \
+            --handler lambda_function.lambda_handler 
+          fi
+
       - name: Verify deployment
         run: |
          echo "Waiting for Lambda deployment to complete..."
