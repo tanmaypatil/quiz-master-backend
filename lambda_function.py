@@ -41,11 +41,23 @@ def lambda_handler(event: Dict[str, Any], context) -> Dict[str, Any]:
     system_prompt: Optional[str] = None  # Default system prompt can be set here if needed
     try:
         load_dotenv()
-        # Parse input
-        prompt = event.get('prompt')
-        tags = event.get('tags', [])
-        model = event.get('model', 'claude-sonnet-4-20250514')  # Latest Claude Sonnet 4
         
+        if isinstance(event, dict) and 'body' in event:
+            # Check if body is a string (JSON) and parse it
+            if isinstance(event['body'], str):
+                try:
+                    body = json.loads(event['body'])
+                except json.JSONDecodeError:
+                    body = event['body']
+            else:
+                body = event['body']
+        else:
+            body = event
+        # Parse input
+        prompt = body.get('prompt')
+        tags = body.get('tags', [])
+        model = body.get('model', 'claude-sonnet-4-20250514')  # Latest Claude Sonnet 4
+        logger.info(f"Received event: {body}")
         # Validate required inputs
         if not prompt:
             return create_error_response(400, "Missing required field: 'prompt'")
