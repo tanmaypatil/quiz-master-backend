@@ -1,15 +1,31 @@
 import json
 import boto3
 import botocore
-import dotenv
+from dotenv import load_dotenv
 import logging
 from typing import Dict, List, Any, Optional
 import anthropic
 import os
+import re
 
 # Configure logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+
+def extract_json_from_response(response_text):
+    # Remove markdown code blocks
+    cleaned = re.sub(r'```json\s*|\s*```', '', response_text)
+    
+    # Remove any leading/trailing whitespace
+    cleaned = cleaned.strip()
+    
+    # Try to parse as JSON
+    try:
+        return json.loads(cleaned)
+    except json.JSONDecodeError as e:
+        print(f"JSON parsing error in : {e}")
+        raise json.JSONDecodeError (f"Invalid JSON format in response: {e}")
+        return cleaned  # Return cleaned text if JSON parsing fails
 
 def lambda_handler(event: Dict[str, Any], context) -> Dict[str, Any]:
     """
@@ -22,8 +38,9 @@ def lambda_handler(event: Dict[str, Any], context) -> Dict[str, Any]:
         "model": "claude-sonnet-4-20250514"  # Options: claude-sonnet-4-20250514, claude-opus-4-20250514, claude-3-7-sonnet-20250219
     }
     """
-    
+    system_prompt: Optional[str] = None  # Default system prompt can be set here if needed
     try:
+        load_dotenv()
         # Parse input
         prompt = event.get('prompt')
         tags = event.get('tags', [])
@@ -51,9 +68,8 @@ def lambda_handler(event: Dict[str, Any], context) -> Dict[str, Any]:
         # Build the user message
         user_message = build_user_message(prompt, tags)
         
-        # Use default system prompt if none provided
-        if not system_prompt:
-            system_prompt = get_default_system_prompt()
+        # set the system prompt.
+        system_prompt = get_default_system_prompt()
         
         logger.info(f"Processing request with model: {model}")
         logger.info(f"Tags provided: {tags}")
@@ -74,11 +90,13 @@ def lambda_handler(event: Dict[str, Any], context) -> Dict[str, Any]:
         
         # Extract the response text
         response_text = response.content[0].text
-        
-        # Try to parse as JSON to validate
-        try:
-            parsed_json = json.loads(response_text)
-            logger.info("Successfully generated and parsed JSON response")
+
+        logger.info(f"Claude response: {response_text}")
+        try :
+          # Extract JSON from the response text by removing markdown code blocks
+          extracted_json = extract_json_from_response(response_text)  
+          logger.info(f"Post extract json: {extracted_json}")
+           
         except json.JSONDecodeError as e:
             logger.warning(f"Claude response is not valid JSON: {e}")
             # Return the raw response with a warning
@@ -108,7 +126,7 @@ def lambda_handler(event: Dict[str, Any], context) -> Dict[str, Any]:
             },
             'body': json.dumps({
                 'success': True,
-                'data': parsed_json,
+                'data': extracted_json,
                 'usage': {
                     'input_tokens': response.usage.input_tokens,
                     'output_tokens': response.usage.output_tokens
@@ -183,21 +201,4 @@ def create_error_response(status_code: int, message: str) -> Dict[str, Any]:
     }
 
 
-# Optional: Function for testing locally
-def test_locally():
-    """Function for local testing"""
-    test_event = {
-        "prompt": "Generate a user profile for an e-commerce application",
-        "tags": ["user", "profile", "ecommerce", "preferences"],
-        "system_prompt": "Generate JSON for a user profile including personal info, preferences, and purchase history summary."
-    }
-    
-    # Set environment variable for local testing
-    os.environ['ANTHROPIC_API_KEY'] = 'your-api-key-here'
-    
-    result = lambda_handler(test_event, None)
-    print(json.dumps(result, indent=2))
 
-
-if __name__ == "__main__":
-    test_locally()
