@@ -65,7 +65,8 @@ jobs:
             aws lambda create-function \
             --function-name $FUNCTION_NAME \
             --zip-file fileb://deployment-package.zip \
-            --handler lambda_function.lambda_handler 
+            --handler lambda_function.lambda_handler \
+            --role  arn:aws:iam::585008060270:role/quiz-master
           fi
 
       - name: Verify deployment
