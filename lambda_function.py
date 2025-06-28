@@ -7,6 +7,7 @@ from typing import Dict, List, Any, Optional
 import anthropic
 import os
 import re
+import base64
 
 # Configure logging
 logger = logging.getLogger()
@@ -38,6 +39,63 @@ def lambda_handler(event: Dict[str, Any], context) -> Dict[str, Any]:
         "model": "claude-sonnet-4-20250514"  # Options: claude-sonnet-4-20250514, claude-opus-4-20250514, claude-3-7-sonnet-20250219
     }
     """
+     # Get credentials from environment variables
+    expected_username = os.environ.get('BASIC_AUTH_USERNAME')
+    expected_password = os.environ.get('BASIC_AUTH_PASSWORD')
+    
+    # Check if environment variables are set
+    if not expected_username or not expected_password:
+        logger.error('Basic auth credentials not configured')
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'error': 'Server configuration error'})
+        }
+    
+    # Get Authorization header (check both cases)
+    headers = event.get('headers', {})
+    auth_header = headers.get('Authorization') or headers.get('authorization')
+    
+    if not auth_header or not auth_header.startswith('Basic '):
+        return {
+            'statusCode': 401,
+            'headers': {
+                'WWW-Authenticate': 'Basic realm="Restricted Area"'
+            },
+            'body': json.dumps({'error': 'Authentication required'})
+        }
+    
+    try:
+        # Extract and decode the base64 credentials
+        base64_credentials = auth_header.split(' ')[1]
+        credentials = base64.b64decode(base64_credentials).decode('utf-8')
+        username, password = credentials.split(':', 1)  # Split only on first colon
+        
+        # Validate credentials
+        if username != expected_username or password != expected_password:
+            return {
+                'statusCode': 401,
+                'headers': {
+                    'WWW-Authenticate': 'Basic realm="Restricted Area"'
+                },
+                'body': json.dumps({'error': 'Invalid credentials'})
+            }
+    except (ValueError, UnicodeDecodeError) as e:
+        logger.error(f'Error processing authentication: {str(e)}')
+        return {
+            'statusCode': 401,
+            'headers': {
+                'WWW-Authenticate': 'Basic realm="Restricted Area"'
+            },
+            'body': json.dumps({'error': 'Invalid authentication format'})
+        }
+    except Exception as e:
+        logger.error(f'Unexpected error: {str(e)}')
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'error': 'Internal server error'})
+        }    
+        # Authentication successful - proceed with your main logic
+    logger.info(f'Authentication successful for user: {username}')
     system_prompt: Optional[str] = None  # Default system prompt can be set here if needed
     try:
         load_dotenv()
@@ -194,7 +252,7 @@ Sample JSON format:
             "PACS.002 is for acknowledgement, CAMT.035 is for final status",
             "CAMT.035 is only for domestic payments"
         ],
-        "correct": 0
+        "correct": 1
 }"""
 
 
