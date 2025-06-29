@@ -60,6 +60,7 @@ jobs:
             aws lambda update-function-configuration \
             --function-name $FUNCTION_NAME \
             --zip-file fileb://deployment-package.zip
+            --environment Variables='{"BASIC_AUTH_USERNAME": "${{ secrets.BASIC_AUTH_USERNAME }}","BASIC_AUTH_PASSWORD": "${{ secrets.BASIC_AUTH_PASSWORD }}"
           else
             echo "Function does not exist, creating new one..."
             aws lambda create-function \
