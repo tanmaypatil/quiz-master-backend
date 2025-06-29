@@ -57,7 +57,7 @@ jobs:
            # Check if function exists
           if aws lambda get-function --function-name $FUNCTION_NAME 2>/dev/null; then
             echo "Function exists, updating code..."
-            aws lambda update-function-code \
+            aws lambda update-function-configuration \
             --function-name $FUNCTION_NAME \
             --zip-file fileb://deployment-package.zip
           else
