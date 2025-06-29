@@ -58,7 +58,7 @@ jobs:
           if aws lambda get-function --function-name $FUNCTION_NAME 2>/dev/null; then
             echo "Function exists, updating code..."
             aws lambda update-function-configuration \
-            --function-name $FUNCTION_NAME \
+            --function-name $FUNCTION_NAME   \
             --environment Variables='{"BASIC_AUTH_USERNAME": "${{ secrets.BASIC_AUTH_USERNAME }}","BASIC_AUTH_PASSWORD": "${{ secrets.BASIC_AUTH_PASSWORD }}"}'
           else
             echo "Function does not exist, creating new one..."
