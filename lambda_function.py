@@ -39,6 +39,24 @@ def lambda_handler(event: Dict[str, Any], context) -> Dict[str, Any]:
         "model": "claude-sonnet-4-20250514"  # Options: claude-sonnet-4-20250514, claude-opus-4-20250514, claude-3-7-sonnet-20250219
     }
     """
+    # Log the incoming event
+    logger.info(f"Received event: {event}")
+       # Standard CORS headers
+    cors_headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'authorization, content-type',
+        'Access-Control-Allow-Credentials': 'true'
+    }
+    
+    # Handle OPTIONS preflight
+    if event.get('requestContext', {}).get('http', {}).get('method') == 'OPTIONS':
+        return {
+            'statusCode': 200,
+            'headers': cors_headers,
+            'body': ''
+        }
+    
      # Get credentials from environment variables
     expected_username = os.environ.get('BASIC_AUTH_USERNAME')
     expected_password = os.environ.get('BASIC_AUTH_PASSWORD')
