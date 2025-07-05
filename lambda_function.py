@@ -173,8 +173,8 @@ def lambda_handler(event: Dict[str, Any], context) -> Dict[str, Any]:
             return {
                 'statusCode': 200,
                 'headers': {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*'
+                    'Content-Type': 'application/json'
+                    
                 },
                 'body': json.dumps({
                     'success': True,
@@ -191,8 +191,8 @@ def lambda_handler(event: Dict[str, Any], context) -> Dict[str, Any]:
         return {
             'statusCode': 200,
             'headers': {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
+                'Content-Type': 'application/json'
+                
             },
             'body': json.dumps({
                 'success': True,
@@ -262,8 +262,8 @@ def create_error_response(status_code: int, message: str) -> Dict[str, Any]:
     return {
         'statusCode': status_code,
         'headers': {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
+            'Content-Type': 'application/json'
+
         },
         'body': json.dumps({
             'success': False,
