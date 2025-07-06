@@ -262,7 +262,7 @@ Key requirements:
 - Always generate structured JSON based on the user prompts
 - Always respond with valid JSON
 - Include relevant metadata when appropriate
-- Correct answer index should be 1-based (i.e., the first option is index 1)
+- Correct answer index should be 0-based (i.e., the first option is index 0)
 
 Sample JSON format:
  {
@@ -273,7 +273,7 @@ Sample JSON format:
             "PACS.002 is for acknowledgement, CAMT.035 is for final status",
             "CAMT.035 is only for domestic payments"
         ],
-        "correct": 1
+        "correct": 0
 }"""
 
 
